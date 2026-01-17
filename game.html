@@ -22,6 +22,30 @@
             align-items: center;
         }
 
+        @media (max-width: 600px) {
+            .game-container {
+                height: 100vh;
+            }
+
+            .game-area {
+                flex: none;
+                height: calc(100vh - 80px);
+                padding: 10px;
+            }
+
+            .button-area {
+                flex: none;
+                height: 80px;
+                width: calc(100% - 20px);
+                margin: 0 auto;
+            }
+
+            .game-board {
+                width: min(100%, calc(100vh - 80px));
+                height: min(100%, calc(100vh - 80px));
+            }
+        }
+
         .game-container {
             width: 100%;
             max-width: 500px;
@@ -68,6 +92,26 @@
 
         .test-button.hidden {
             display: none;
+        }
+
+        .right-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .return-button {
+            font-size: 12px;
+            padding: 5px 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .return-button:hover {
+            background: #2980b9;
         }
 
         .level-info {
@@ -376,7 +420,10 @@
                         <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
                     </div>
                 </div>
-                <button class="test-button" id="test-btn">测试模式: 关</button>
+                <div class="right-buttons">
+                    <button class="return-button" id="return-btn">返回奇迹宏宏</button>
+                    <button class="test-button" id="test-btn">测试模式: 关</button>
+                </div>
             </div>
             <div class="game-board" id="game-board"></div>
         </div>
@@ -475,6 +522,7 @@
             document.getElementById('btn-pink').addEventListener('click', () => useButton('pink'));
 
             document.getElementById('test-btn').addEventListener('click', toggleTestMode);
+            document.getElementById('return-btn').addEventListener('click', () => window.location.href = 'https://miraclehonghong.com');
         }
 
         // 开始游戏
