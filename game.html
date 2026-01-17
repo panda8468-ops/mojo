@@ -85,6 +85,7 @@
             }
 
             .top-bar {
+                flex: none;
                 height: 40px;
                 padding: 6px 10px;
             }
@@ -1074,7 +1075,7 @@
         // 填充消除的格子
         function fillEliminatedCells(matches) {
             const eliminatedPositions = new Set(matches.map(m => `${m.row},${m.col}`));
-            const positionsToAnimate = new Set(); // 记录需要下落动画的格子
+            const propPositions = new Set(); // 记录道具位置，这些位置不参与重力下落
 
             // 处理道具生成
             const processedMatches = new Set();
@@ -1099,6 +1100,7 @@
                     gameState.grid[propPos.row][propPos.col].prop = 'prop_magic';
                     gameState.grid[propPos.row][propPos.col].animal = null;
                     eliminatedPositions.delete(`${propPos.row},${propPos.col}`);
+                    propPositions.add(`${propPos.row},${propPos.col}`);
                     matchPositions.forEach(pos => processedMatches.add(`${pos.row},${pos.col}`));
                 } else if (match.length === 4 && !isInCombination(match)) {
                     // 直线四连 - 生成道具
@@ -1118,23 +1120,110 @@
                     gameState.grid[propPos.row][propPos.col].prop = isHorizontal ? 'prop_h' : 'prop_v';
                     gameState.grid[propPos.row][propPos.col].animal = null;
                     eliminatedPositions.delete(`${propPos.row},${propPos.col}`);
+                    propPositions.add(`${propPos.row},${propPos.col}`);
                     matchPositions.forEach(pos => processedMatches.add(`${pos.row},${pos.col}`));
                 }
             });
 
-            // 随机填充消除的格子
+            // 将消除的位置设为空，但保留道具位置
             eliminatedPositions.forEach(pos => {
                 const [row, col] = pos.split(',').map(Number);
                 gameState.grid[row][col] = {
-                    animal: getRandomAnimal(),
+                    animal: null,
                     prop: null
                 };
-                positionsToAnimate.add(pos); // 记录需要动画的格子
             });
+
+            // 实现重力效果：一行一行往下掉
+            dropAnimalsWithGravity(propPositions);
+        }
+
+        // 实现重力效果，让动物一行一行往下掉
+        function dropAnimalsWithGravity(propPositions) {
+            let hasChanges = true;
+            let step = 0;
+
+            const dropStep = () => {
+                if (!hasChanges) {
+                    // 填充顶部空白
+                    setTimeout(() => fillTopBlanks(propPositions), CONFIG.ANIMATION_DURATION);
+                    return;
+                }
+
+                hasChanges = false;
+                const movedPositions = new Set(); // 记录移动的格子位置
+
+                // 从底部开始，逐列处理
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    for (let row = CONFIG.GRID_SIZE - 1; row >= 0; row--) {
+                        // 跳过道具位置
+                        if (propPositions.has(`${row},${col}`)) continue;
+
+                        if (gameState.grid[row][col].animal === null) {
+                            // 找到上面的第一个非空动物（跳过道具位置）
+                            let sourceRow = row - 1;
+                            while (sourceRow >= 0 && (gameState.grid[sourceRow][col].animal === null || propPositions.has(`${sourceRow},${col}`))) {
+                                sourceRow--;
+                            }
+
+                            if (sourceRow >= 0) {
+                                // 移动动物向下
+                                gameState.grid[row][col] = gameState.grid[sourceRow][col];
+                                gameState.grid[sourceRow][col] = {
+                                    animal: null,
+                                    prop: null
+                                };
+                                hasChanges = true;
+                                movedPositions.add(`${row},${col}`); // 记录移动到的位置
+                            }
+                        }
+                    }
+                }
+
+                if (hasChanges) {
+                    // 渲染当前状态
+                    renderGrid();
+
+                    // 只给移动的动物添加下落动画
+                    movedPositions.forEach(pos => {
+                        const [row, col] = pos.split(',').map(Number);
+                        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                        if (cell) {
+                            cell.classList.add('drop-animation');
+                        }
+                    });
+
+                    // 继续下一行
+                    setTimeout(dropStep, CONFIG.ANIMATION_DURATION / 2);
+                } else {
+                    // 填充顶部空白
+                    setTimeout(() => fillTopBlanks(propPositions), CONFIG.ANIMATION_DURATION);
+                }
+            };
+
+            dropStep();
+        }
+
+        // 填充顶部的空白位置
+        function fillTopBlanks(propPositions) {
+            const positionsToAnimate = new Set();
+
+            // 从顶部开始填充空白，跳过道具位置
+            for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                    if (gameState.grid[row][col].animal === null && !propPositions.has(`${row},${col}`)) {
+                        gameState.grid[row][col] = {
+                            animal: getRandomAnimal(),
+                            prop: null
+                        };
+                        positionsToAnimate.add(`${row},${col}`);
+                    }
+                }
+            }
 
             renderGrid();
 
-            // 只给被消除后新填充的格子添加下落动画
+            // 给新填充的格子添加下落动画
             positionsToAnimate.forEach(pos => {
                 const [row, col] = pos.split(',').map(Number);
                 const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
