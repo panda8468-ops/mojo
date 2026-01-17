@@ -29,20 +29,27 @@
 
             .game-area {
                 flex: none;
-                height: calc(100vh - 80px);
-                padding: 10px;
+                height: calc(100vh - 60px);
+                padding: 5px;
+            }
+
+            .top-bar {
+                flex: none;
+                height: 40px;
+                margin-bottom: 5px;
+            }
+
+            .game-board {
+                flex: 1;
+                width: 100%;
+                aspect-ratio: 1;
             }
 
             .button-area {
                 flex: none;
-                height: 80px;
+                height: 60px;
                 width: calc(100% - 20px);
                 margin: 0 auto;
-            }
-
-            .game-board {
-                width: min(100%, calc(100vh - 80px));
-                height: min(100%, calc(100vh - 80px));
             }
         }
 
