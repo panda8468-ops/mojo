@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mojo消消乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e1e1e1 0%, #e1e1e1 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 上部区域 */
+        .game-area {
+            flex: 9;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            background: url('assets/background.png') center/cover no-repeat;
+        }
+
+        /* 顶部信息栏 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .test-button {
+            font-size: 12px;
+            padding: 5px 10px;
+            background: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .test-button:hover {
+            background: #e67e22;
+        }
+
+        .test-button.hidden {
+            display: none;
+        }
+
+        .level-info {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-container {
+            flex: 1;
+            margin: 0 15px;
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* 游戏网格 */
+        .game-board {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .cell {
+            background-color: #a1c5cb;
+            border: 2px solid white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            position: relative;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+        }
+
+        .cell.dragging {
+            transform: scale(1.1);
+            z-index: 100;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .animal {
+            width: 80%;
+            height: 80%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 0.2s ease;
+        }
+
+        .prop {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* 下部区域 - 功能按钮 */
+        .button-area {
+            flex: 1;
+            width: calc(100% - 20px);
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            background: linear-gradient(180deg, #2c3e50, #34495e);
+        }
+
+        .game-button {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .game-button:hover {
+            transform: scale(1.1);
+        }
+
+        .game-button:active {
+            transform: scale(0.95);
+        }
+
+        .game-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-button::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            font-size: 12px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-red {
+            background: url('assets/btn_red.png') center/cover no-repeat;
+        }
+
+        .btn-yellow {
+            background: url('assets/btn_yellow.png') center/cover no-repeat;
+        }
+
+        .btn-green {
+            background: url('assets/btn_green.png') center/cover no-repeat;
+        }
+
+        .btn-blue {
+            background: url('assets/btn_blue.png') center/cover no-repeat;
+        }
+
+        .btn-pink {
+            background: url('assets/btn_pink.png') center/cover no-repeat;
+        }
+
+        /* 动画效果 */
+        .eliminate-animation {
+            animation: eliminate 0.3s ease-out forwards;
+        }
+
+        @keyframes eliminate {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .drop-animation {
+            animation: drop 0.3s ease-out;
+        }
+
+        @keyframes drop {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* 恭喜过关弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: url('assets/congratulations.png') center/cover no-repeat;
+            width: 80%;
+            height: 60%;
+            max-width: 400px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        /* 开始界面 */
+        .start-modal .modal-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .start-modal h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* 连消提示 */
+        .combo-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 500;
+        }
+
+        .combo-display.show {
+            animation: comboAnim 1s ease-out;
+        }
+
+        @keyframes comboAnim {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* 宏咪大破坏动画 */
+        .shake-animation {
+            animation: shake 2s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-10px, -10px); }
+            20% { transform: translate(10px, 10px); }
+            30% { transform: translate(-10px, 10px); }
+            40% { transform: translate(10px, -10px); }
+            50% { transform: translate(-5px, -5px); }
+            60% { transform: translate(5px, 5px); }
+            70% { transform: translate(-5px, 5px); }
+            80% { transform: translate(5px, -5px); }
+            90% { transform: translate(-3px, 3px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 上部区域 -->
+        <div class="game-area">
+            <div class="top-bar">
+                <div class="level-info">
+                    <div id="level-name">第1关</div>
+                    <div style="font-size: 12px; color: #666;">目标: <span id="target-score">329</span>分</div>
+                </div>
+                <div class="score-container">
+                    <div class="score-display">得分: <span id="current-score">0</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <button class="test-button" id="test-btn">测试模式: 关</button>
+            </div>
+            <div class="game-board" id="game-board"></div>
+        </div>
+
+        <!-- 下部区域 - 功能按钮 -->
+        <div class="button-area">
+            <button class="game-button btn-red" id="btn-red" data-count="1" title="团长威严"></button>
+            <button class="game-button btn-yellow" id="btn-yellow" data-count="1" title="玛甜甜凸槌"></button>
+            <button class="game-button btn-green" id="btn-green" data-count="1" title="石爸福利"></button>
+            <button class="game-button btn-blue" id="btn-blue" data-count="1" title="冠佑显灵"></button>
+            <button class="game-button btn-pink" id="btn-pink" data-count="1" title="宏咪大破坏"></button>
+        </div>
+    </div>
+
+    <!-- 开始弹窗 -->
+    <div class="modal start-modal show" id="start-modal">
+        <div class="modal-content">
+            <h1>Mojo消消乐</h1>
+            <p>准备好了吗？</p>
+            <button class="modal-btn" id="start-btn">开始游戏</button>
+        </div>
+    </div>
+
+    <!-- 恭喜过关弹窗 -->
+    <div class="modal" id="win-modal">
+        <div class="modal-content">
+            <h2 style="color: #f39c12; font-size: 28px; margin-bottom: 10px;">恭喜过关！</h2>
+            <p>当前得分: <span id="final-score">0</span></p>
+            <button class="modal-btn" id="next-level-btn">下一关</button>
+        </div>
+    </div>
+
+    <!-- 连消提示 -->
+    <div class="combo-display" id="combo-display"></div>
+
+    <script>
+        // 游戏配置
+        const CONFIG = {
+            GRID_SIZE: 10,
+            ANIMAL_COUNT: 10,
+            TOTAL_LEVELS: 80,
+            BASE_TARGET_SCORE: 329,
+            SCORE_PER_LEVEL: 525,
+            ANIMATION_DURATION: 300,
+            showTestButton: true  // 测试按钮是否显示
+        };
+
+        // 游戏状态
+        let gameState = {
+            level: 1,
+            score: 0,
+            targetScore: CONFIG.BASE_TARGET_SCORE,
+            grid: [],
+            buttonsUsed: {
+                red: false,
+                yellow: false,
+                green: false,
+                blue: false,
+                pink: false
+            },
+            isAnimating: false,
+            comboCount: 0,
+            draggedCell: null,
+            skillUsed: false,
+            testModeEnabled: false  // 测试模式启用标志
+        };
+
+        // DOM元素
+        const gameBoard = document.getElementById('game-board');
+        const currentScoreEl = document.getElementById('current-score');
+        const targetScoreEl = document.getElementById('target-score');
+        const levelNameEl = document.getElementById('level-name');
+        const progressFill = document.getElementById('progress-fill');
+        const startModal = document.getElementById('start-modal');
+        const winModal = document.getElementById('win-modal');
+        const comboDisplay = document.getElementById('combo-display');
+
+        // 初始化游戏
+        function initGame() {
+            setupEventListeners();
+            if (!CONFIG.showTestButton) {
+                document.getElementById('test-btn').classList.add('hidden');
+            }
+            loadLevel(gameState.level);
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            document.getElementById('next-level-btn').addEventListener('click', nextLevel);
+
+            document.getElementById('btn-red').addEventListener('click', () => useButton('red'));
+            document.getElementById('btn-yellow').addEventListener('click', () => useButton('yellow'));
+            document.getElementById('btn-green').addEventListener('click', () => useButton('green'));
+            document.getElementById('btn-blue').addEventListener('click', () => useButton('blue'));
+            document.getElementById('btn-pink').addEventListener('click', () => useButton('pink'));
+
+            document.getElementById('test-btn').addEventListener('click', toggleTestMode);
+        }
+
+        // 开始游戏
+        function startGame() {
+            startModal.classList.remove('show');
+            gameState.score = 0;
+            gameState.comboCount = 0;
+            updateUI();
+        }
+
+        // 加载关卡
+        function loadLevel(level) {
+            gameState.level = level;
+            gameState.targetScore = CONFIG.BASE_TARGET_SCORE + (level - 1) * CONFIG.SCORE_PER_LEVEL;
+            gameState.score = 0;
+            gameState.comboCount = 0;
+            gameState.testModeEnabled = false;  // 重置测试模式
+            gameState.buttonsUsed = {
+                red: false,
+                yellow: false,
+                green: false,
+                blue: false,
+                pink: false
+            };
+
+            levelNameEl.textContent = `第${level}关`;
+            updateUI();
+            resetButtons();
+            updateTestButton();  // 更新测试按钮状态
+            generateGrid();
+            renderGrid();
+        }
+
+        // 生成网格
+        function generateGrid() {
+            gameState.grid = [];
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                gameState.grid[row] = [];
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    gameState.grid[row][col] = {
+                        animal: getRandomAnimal(),
+                        prop: null
+                    };
+                }
+            }
+            // 确保初始状态没有可消除的组合
+            while (findMatches().length > 0) {
+                generateGrid();
+            }
+        }
+
+        // 获取随机动物
+        function getRandomAnimal() {
+            return Math.floor(Math.random() * CONFIG.ANIMAL_COUNT);
+        }
+
+        // 渲染网格
+        function renderGrid() {
+            gameBoard.innerHTML = '';
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    const cellData = gameState.grid[row][col];
+                    
+                    // 创建动物元素
+                    if (cellData.animal !== null) {
+                        const animal = document.createElement('div');
+                        animal.className = 'animal';
+                        animal.style.backgroundImage = `url('assets/animal${cellData.animal}.png')`;
+                        cell.appendChild(animal);
+                    }
+                    
+                    // 如果有道具，创建道具元素
+                    if (cellData.prop) {
+                        const prop = document.createElement('div');
+                        prop.className = 'prop';
+                        prop.style.backgroundImage = `url('assets/${cellData.prop}.png')`;
+                        cell.appendChild(prop);
+                        
+                        // 道具点击事件
+                        cell.addEventListener('click', () => useProp(row, col, cellData.prop));
+                    }
+                    
+                    // 添加拖拽事件
+                    cell.addEventListener('dragstart', handleDragStart);
+                    cell.addEventListener('dragend', handleDragEnd);
+                    cell.addEventListener('dragover', handleDragOver);
+                    cell.addEventListener('drop', handleDrop);
+                    
+                    // 触摸事件支持
+                    cell.addEventListener('touchstart', handleTouchStart, { passive: false });
+                    cell.addEventListener('touchmove', handleTouchMove, { passive: false });
+                    cell.addEventListener('touchend', handleTouchEnd);
+                    
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        // 拖拽处理
+        let touchStartCell = null;
+
+        function handleDragStart(e) {
+            gameState.draggedCell = e.target.closest('.cell');
+            gameState.draggedCell.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            if (gameState.draggedCell) {
+                gameState.draggedCell.classList.remove('dragging');
+                gameState.draggedCell = null;
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetCell = e.target.closest('.cell');
+            if (gameState.draggedCell && targetCell && gameState.draggedCell !== targetCell) {
+                swapAnimals(gameState.draggedCell, targetCell);
+            }
+        }
+
+        // 触摸处理
+        function handleTouchStart(e) {
+            e.preventDefault();
+            touchStartCell = e.target.closest('.cell');
+            touchStartCell.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+        }
+
+        function handleTouchEnd(e) {
+            if (touchStartCell) {
+                const touch = e.changedTouches[0];
+                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetCell = targetElement ? targetElement.closest('.cell') : null;
+                
+                if (targetCell && touchStartCell !== targetCell) {
+                    swapAnimals(touchStartCell, targetCell);
+                }
+                
+                touchStartCell.classList.remove('dragging');
+                touchStartCell = null;
+            }
+        }
+
+        // 交换动物
+        function swapAnimals(cell1, cell2) {
+            if (gameState.isAnimating) return;
+
+            const row1 = parseInt(cell1.dataset.row);
+            const col1 = parseInt(cell1.dataset.col);
+            const row2 = parseInt(cell2.dataset.row);
+            const col2 = parseInt(cell2.dataset.col);
+
+            // 检查是否相邻
+            const isAdjacent = (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                              (Math.abs(col1 - col2) === 1 && row1 === row2);
+
+            if (!isAdjacent) return;
+            
+            // 交换
+            const temp = gameState.grid[row1][col1];
+            gameState.grid[row1][col1] = gameState.grid[row2][col2];
+            gameState.grid[row2][col2] = temp;
+            
+            renderGrid();
+            
+            // 检查是否有消除
+            setTimeout(() => {
+                const matches = findMatches();
+                if (matches.length > 0) {
+                    gameState.comboCount = 0;
+                    processMatches();
+                } else if (gameState.testModeEnabled) {
+                    // 测试模式：允许无效移动
+                } else {
+                    // 交换回来
+                    const temp = gameState.grid[row1][col1];
+                    gameState.grid[row1][col1] = gameState.grid[row2][col2];
+                    gameState.grid[row2][col2] = temp;
+                    renderGrid();
+
+                    // 检查是否还有其他可能的移动
+                    setTimeout(() => {
+                        if (!hasPossibleMoves()) {
+                            resetGrid();
+                        }
+                    }, CONFIG.ANIMATION_DURATION);
+                }
+            }, CONFIG.ANIMATION_DURATION);
+        }
+
+        // 检查是否存在可能的移动
+        function hasPossibleMoves() {
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    // 尝试向右交换
+                    if (col < CONFIG.GRID_SIZE - 1) {
+                        // 临时交换
+                        let temp = gameState.grid[row][col];
+                        gameState.grid[row][col] = gameState.grid[row][col + 1];
+                        gameState.grid[row][col + 1] = temp;
+                        
+                        if (findMatches().length > 0) {
+                            // 交换回来
+                            gameState.grid[row][col + 1] = gameState.grid[row][col];
+                            gameState.grid[row][col] = temp;
+                            return true;
+                        }
+                        
+                        // 交换回来
+                        gameState.grid[row][col + 1] = gameState.grid[row][col];
+                        gameState.grid[row][col] = temp;
+                    }
+                    
+                    // 尝试向下交换
+                    if (row < CONFIG.GRID_SIZE - 1) {
+                        // 临时交换
+                        let temp = gameState.grid[row][col];
+                        gameState.grid[row][col] = gameState.grid[row + 1][col];
+                        gameState.grid[row + 1][col] = temp;
+                        
+                        if (findMatches().length > 0) {
+                            // 交换回来
+                            gameState.grid[row + 1][col] = gameState.grid[row][col];
+                            gameState.grid[row][col] = temp;
+                            return true;
+                        }
+                        
+                        // 交换回来
+                        gameState.grid[row + 1][col] = gameState.grid[row][col];
+                        gameState.grid[row][col] = temp;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        // 重置网格
+        function resetGrid() {
+            generateGrid();
+            renderGrid();
+        }
+
+        // 查找匹配
+        function findMatches() {
+            const matches = [];
+            const checked = new Set();
+
+            // 检查横向
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                for (let col = 0; col < CONFIG.GRID_SIZE - 2; col++) {
+                    const animal = gameState.grid[row][col].animal;
+                    if (animal !== null &&
+                        gameState.grid[row][col + 1].animal === animal &&
+                        gameState.grid[row][col + 2].animal === animal) {
+
+                        let length = 3;
+                        while (col + length < CONFIG.GRID_SIZE &&
+                               gameState.grid[row][col + length].animal === animal) {
+                            length++;
+                        }
+
+                        for (let i = 0; i < length; i++) {
+                            const key = `${row},${col + i}`;
+                            if (!checked.has(key)) {
+                                checked.add(key);
+                                matches.push({ row, col: col + i, length });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 检查纵向
+            for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                for (let row = 0; row < CONFIG.GRID_SIZE - 2; row++) {
+                    const animal = gameState.grid[row][col].animal;
+                    if (animal !== null &&
+                        gameState.grid[row + 1][col].animal === animal &&
+                        gameState.grid[row + 2][col].animal === animal) {
+
+                        let length = 3;
+                        while (row + length < CONFIG.GRID_SIZE &&
+                               gameState.grid[row + length][col].animal === animal) {
+                            length++;
+                        }
+
+                        for (let i = 0; i < length; i++) {
+                            const key = `${row + i},${col}`;
+                            if (!checked.has(key)) {
+                                checked.add(key);
+                                matches.push({ row: row + i, col, length });
+                            }
+                        }
+                    }
+                }
+            }
+
+            return matches;
+        }
+
+
+        // 播放音效
+        function playSound(soundFile) {
+            const audio = new Audio(`assets/${soundFile}`);
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        // 处理匹配
+        function processMatches() {
+            gameState.isAnimating = true;
+
+            const matches = findMatches();
+
+            if (matches.length === 0) {
+                gameState.isAnimating = false;
+                checkWinCondition();
+                return;
+            }
+
+            gameState.comboCount++;
+            showCombo();
+
+            // 计算分数
+            const eliminatedCount = new Set(matches.map(m => `${m.row},${m.col}`)).size;
+            const baseScore = eliminatedCount * 10;
+            const comboBonus = gameState.comboCount > 1 ? gameState.comboCount : 1;
+            const earnedScore = baseScore * comboBonus;
+
+            gameState.score += earnedScore;
+            updateUI();
+
+            // 立即检查胜利条件
+            checkWinCondition();
+
+            // 播放消除音效
+            playSound('clear.mp3');
+
+            // 应用消除动画
+            matches.forEach(match => {
+                const cell = document.querySelector(`.cell[data-row="${match.row}"][data-col="${match.col}"]`);
+                if (cell) {
+                    cell.classList.add('eliminate-animation');
+                }
+            });
+
+            // 延迟后填充新动物
+            setTimeout(() => {
+                fillEliminatedCells(matches);
+                gameState.isAnimating = false;
+
+                // 检查是否有新的匹配（连消）
+                setTimeout(() => {
+                    const newMatches = findMatches();
+                    if (newMatches.length > 0) {
+                        processMatches();
+                    }
+                }, CONFIG.ANIMATION_DURATION);
+            }, CONFIG.ANIMATION_DURATION);
+        }
+
+        // 填充消除的格子
+        function fillEliminatedCells(matches) {
+            const eliminatedPositions = new Set(matches.map(m => `${m.row},${m.col}`));
+            const positionsToAnimate = new Set(); // 记录需要下落动画的格子
+
+            // 处理道具生成
+            const processedMatches = new Set();
+            matches.forEach(match => {
+                const key = `${match.row},${match.col}`;
+                if (processedMatches.has(key)) return;
+
+                if (match.length >= 5) {
+                    // 五连或更多 - 生成魔法道具
+                    // 收集所有匹配位置
+                    const matchPositions = [];
+                    matches.forEach(m => {
+                        if (m.length === match.length && m.row === match.row && m.col >= match.col && m.col < match.col + match.length) {
+                            matchPositions.push({ row: m.row, col: m.col });
+                        } else if (m.length === match.length && m.col === match.col && m.row >= match.row && m.row < match.row + match.length) {
+                            matchPositions.push({ row: m.row, col: m.col });
+                        }
+                    });
+                    // 随机选一个位置生成魔法道具
+                    const randomIndex = Math.floor(Math.random() * matchPositions.length);
+                    const propPos = matchPositions[randomIndex];
+                    gameState.grid[propPos.row][propPos.col].prop = 'prop_magic';
+                    gameState.grid[propPos.row][propPos.col].animal = null;
+                    eliminatedPositions.delete(`${propPos.row},${propPos.col}`);
+                    matchPositions.forEach(pos => processedMatches.add(`${pos.row},${pos.col}`));
+                } else if (match.length === 4 && !isInCombination(match)) {
+                    // 直线四连 - 生成道具
+                    // 收集所有匹配位置
+                    const matchPositions = [];
+                    matches.forEach(m => {
+                        if (m.length === 4 && m.row === match.row && m.col >= match.col && m.col < match.col + 4) {
+                            matchPositions.push({ row: m.row, col: m.col });
+                        } else if (m.length === 4 && m.col === match.col && m.row >= match.row && m.row < match.row + 4) {
+                            matchPositions.push({ row: m.row, col: m.col });
+                        }
+                    });
+                    // 判断横向还是纵向
+                    const isHorizontal = matchPositions.every(pos => pos.row === matchPositions[0].row);
+                    // 选择最左侧或最上方位置生成炸弹
+                    const propPos = matchPositions[0];
+                    gameState.grid[propPos.row][propPos.col].prop = isHorizontal ? 'prop_h' : 'prop_v';
+                    gameState.grid[propPos.row][propPos.col].animal = null;
+                    eliminatedPositions.delete(`${propPos.row},${propPos.col}`);
+                    matchPositions.forEach(pos => processedMatches.add(`${pos.row},${pos.col}`));
+                }
+            });
+
+            // 随机填充消除的格子
+            eliminatedPositions.forEach(pos => {
+                const [row, col] = pos.split(',').map(Number);
+                gameState.grid[row][col] = {
+                    animal: getRandomAnimal(),
+                    prop: null
+                };
+                positionsToAnimate.add(pos); // 记录需要动画的格子
+            });
+
+            renderGrid();
+
+            // 只给被消除后新填充的格子添加下落动画
+            positionsToAnimate.forEach(pos => {
+                const [row, col] = pos.split(',').map(Number);
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                if (cell) {
+                    cell.classList.add('drop-animation');
+                }
+            });
+        }
+
+        // 检查是否在组合中（L型或T型）
+        function isInCombination(match) {
+            // 简化的检查，实际需要更复杂的逻辑来判断L型或T型
+            return false;
+        }
+
+        // 使用道具
+        function useProp(row, col, propType) {
+            if (gameState.isAnimating) return;
+            
+            gameState.skillUsed = true;
+            const positionsToEliminate = [];
+            
+            switch (propType) {
+                case 'prop_v': // 纵向炸弹 - 清除整列
+                    console.log(`使用纵向炸弹在列 ${col}`);
+                    for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                        positionsToEliminate.push({ row: r, col });
+                        console.log(`添加消除位置: 行${r}, 列${col}`);
+                    }
+                    console.log(`纵向炸弹消除位置总数: ${positionsToEliminate.length}`);
+                    break;
+                    
+                case 'prop_h': // 横向炸弹 - 清除整行
+                    console.log(`使用横向炸弹在行 ${row}`);
+                    for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                        positionsToEliminate.push({ row, col: c });
+                        console.log(`添加消除位置: 行${row}, 列${c}`);
+                    }
+                    console.log(`横向炸弹消除位置总数: ${positionsToEliminate.length}`);
+                    break;
+                    
+                case 'prop_bomb': // 爆炸道具 - 清除3x3
+                    for (let r = row - 1; r <= row + 1; r++) {
+                        for (let c = col - 1; c <= col + 1; c++) {
+                            if (r >= 0 && r < CONFIG.GRID_SIZE && c >= 0 && c < CONFIG.GRID_SIZE) {
+                                positionsToEliminate.push({ row: r, col: c });
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'prop_magic': // 魔力道具 - 清除所有
+                    console.log(`使用魔力道具清除全场`);
+                    for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                        for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                            positionsToEliminate.push({ row: r, col: c });
+                        }
+                    }
+                    console.log(`魔力道具消除位置总数: ${positionsToEliminate.length}`);
+                    break;
+            }
+            
+            // 执行消除
+            gameState.comboCount++;
+            const baseScore = positionsToEliminate.length * 10;
+            const comboBonus = gameState.comboCount > 1 ? gameState.comboCount : 1;
+            gameState.score += baseScore * comboBonus;
+            updateUI();
+
+            // 播放消除音效
+            playSound('clear.mp3');
+
+            positionsToEliminate.forEach(pos => {
+                const cell = document.querySelector(`.cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                if (cell) {
+                    cell.classList.add('eliminate-animation');
+                }
+            });
+            
+            // 先等待消除动画完成
+            setTimeout(() => {
+                // 短暂延迟，让消除效果更明显
+                setTimeout(() => {
+                    console.log(`开始重新填充 ${positionsToEliminate.length} 个位置`);
+                    positionsToEliminate.forEach(pos => {
+                        console.log(`重新填充位置: 行${pos.row}, 列${pos.col}`);
+                        gameState.grid[pos.row][pos.col] = {
+                            animal: getRandomAnimal(),
+                            prop: null
+                        };
+                    });
+                    renderGrid();
+
+                    // 再次延迟后检查新匹配
+                    setTimeout(() => {
+                        const newMatches = findMatches();
+                        console.log(`检查新匹配: ${newMatches.length} 个`);
+                        if (newMatches.length > 0) {
+                            processMatches();
+                        }
+                    }, CONFIG.ANIMATION_DURATION);
+                }, CONFIG.ANIMATION_DURATION / 2); // 额外延迟，让消除效果更明显
+            }, CONFIG.ANIMATION_DURATION);
+        }
+
+        // 使用功能按钮
+        function useButton(buttonType) {
+            if (gameState.buttonsUsed[buttonType] || gameState.isAnimating) return;
+            
+            gameState.buttonsUsed[buttonType] = true;
+            document.getElementById(`btn-${buttonType}`).disabled = true;
+            
+            gameState.comboCount++;
+            
+            let positionsToEliminate = [];
+            
+            switch (buttonType) {
+                case 'red': // 消除任意3行
+                    const rows = getRandomIndices(CONFIG.GRID_SIZE, 3);
+                    rows.forEach(row => {
+                        for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                            positionsToEliminate.push({ row, col: c });
+                        }
+                    });
+                    break;
+                    
+                case 'yellow': // 消除任意3列
+                    const cols = getRandomIndices(CONFIG.GRID_SIZE, 3);
+                    cols.forEach(col => {
+                        for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                            positionsToEliminate.push({ row: r, col });
+                        }
+                    });
+                    break;
+                    
+                case 'green': // 消除5x5格子
+                    const centerRow = Math.floor(CONFIG.GRID_SIZE / 2);
+                    const centerCol = Math.floor(CONFIG.GRID_SIZE / 2);
+                    for (let r = centerRow - 2; r <= centerRow + 2; r++) {
+                        for (let c = centerCol - 2; c <= centerCol + 2; c++) {
+                            if (r >= 0 && r < CONFIG.GRID_SIZE && c >= 0 && c < CONFIG.GRID_SIZE) {
+                                positionsToEliminate.push({ row: r, col: c });
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'blue': // 增加分数
+                    gameState.score += 500;
+                    updateUI();
+                    checkWinCondition();
+                    playSound('ming.mp3');
+                    return;
+
+                case 'pink': // 随机替换动物
+                    // 先播放震动动画
+                    playShakeAnimation();
+                    playSound('ashin.mp3');
+                    return;
+            }
+            
+            // 执行消除
+            const baseScore = positionsToEliminate.length * 10;
+            const comboBonus = gameState.comboCount > 1 ? gameState.comboCount : 1;
+            gameState.score += baseScore * comboBonus;
+            updateUI();
+
+            // 播放技能音效
+            const soundMap = {
+                red: 'monster.mp3',
+                yellow: 'masa.mp3',
+                green: 'stone.mp3',
+                blue: 'ming.mp3',
+                pink: 'ashin.mp3'
+            };
+            playSound(soundMap[buttonType]);
+
+            positionsToEliminate.forEach(pos => {
+                const cell = document.querySelector(`.cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                if (cell) {
+                    cell.classList.add('eliminate-animation');
+                }
+            });
+            
+            setTimeout(() => {
+                positionsToEliminate.forEach(pos => {
+                    gameState.grid[pos.row][pos.col] = {
+                        animal: getRandomAnimal(),
+                        prop: null
+                    };
+                });
+                renderGrid();
+                
+                setTimeout(() => {
+                    const newMatches = findMatches();
+                    if (newMatches.length > 0) {
+                        processMatches();
+                    }
+                }, CONFIG.ANIMATION_DURATION);
+            }, CONFIG.ANIMATION_DURATION);
+        }
+
+        // 获取随机索引
+        function getRandomIndices(max, count) {
+            const indices = [];
+            while (indices.length < count) {
+                const idx = Math.floor(Math.random() * max);
+                if (!indices.includes(idx)) {
+                    indices.push(idx);
+                }
+            }
+            return indices;
+        }
+
+        // 播放宏咪大破坏震动动画
+        function playShakeAnimation() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.add('shake-animation');
+            });
+            
+            // 动画结束后替换动物
+            setTimeout(() => {
+                for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                    for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                        gameState.grid[r][c].animal = getRandomAnimal();
+                    }
+                }
+                
+                // 移除动画类并重新渲染
+                cells.forEach(cell => {
+                    cell.classList.remove('shake-animation');
+                });
+                renderGrid();
+                checkWinCondition();
+            }, 2000);
+        }
+
+        // 显示连消提示
+        function showCombo() {
+            if (gameState.comboCount > 1) {
+                comboDisplay.textContent = `${gameState.comboCount}连消!`;
+                comboDisplay.classList.add('show');
+                setTimeout(() => {
+                    comboDisplay.classList.remove('show');
+                }, 1000);
+            }
+        }
+
+        // 重置按钮
+        function resetButtons() {
+            ['red', 'yellow', 'green', 'blue', 'pink'].forEach(btn => {
+                const button = document.getElementById(`btn-${btn}`);
+                button.disabled = false;
+            });
+        }
+
+        // 更新UI
+        function updateUI() {
+            currentScoreEl.textContent = gameState.score;
+            targetScoreEl.textContent = gameState.targetScore;
+            
+            const progress = Math.min((gameState.score / gameState.targetScore) * 100, 100);
+            progressFill.style.width = `${progress}%`;
+        }
+
+        // 检查胜利条件
+        function checkWinCondition() {
+            if (gameState.score >= gameState.targetScore) {
+                document.getElementById('final-score').textContent = gameState.score;
+                winModal.classList.add('show');
+                // 播放过关音效
+                playSound('cong.mp3');
+            }
+        }
+
+        // 更新测试按钮状态
+        function updateTestButton() {
+            if (!CONFIG.showTestButton) return;
+            const btn = document.getElementById('test-btn');
+            btn.textContent = gameState.testModeEnabled ? '测试模式: 开' : '测试模式: 关';
+            btn.style.background = gameState.testModeEnabled ? '#e74c3c' : '#f39c12';
+        }
+
+        // 切换测试模式
+        function toggleTestMode() {
+            gameState.testModeEnabled = !gameState.testModeEnabled;
+            updateTestButton();
+        }
+
+        // 下一关
+        function nextLevel() {
+            winModal.classList.remove('show');
+            if (gameState.level < CONFIG.TOTAL_LEVELS) {
+                loadLevel(gameState.level + 1);
+            } else {
+                alert('恭喜你通关了所有关卡！');
+                loadLevel(1);
+            }
+        }
+
+        // 启动游戏
+        initGame();
+    </script>
+</body>
+</html>
