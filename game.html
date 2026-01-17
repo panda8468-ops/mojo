@@ -194,6 +194,11 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
+        .cell.swap-target {
+            border: 3px solid #f39c12;
+            box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+        }
+
         .animal {
             width: 80%;
             height: 80%;
@@ -615,9 +620,16 @@
                         prop.className = 'prop';
                         prop.style.backgroundImage = `url('assets/${cellData.prop}.png')`;
                         cell.appendChild(prop);
-                        
-                        // 道具点击事件
-                        cell.addEventListener('click', () => useProp(row, col, cellData.prop));
+
+                        // 道具点击事件 - 绑定到prop元素避免与拖拽冲突
+                        prop.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            useProp(row, col, cellData.prop);
+                        });
+                        prop.addEventListener('touchstart', (e) => {
+                            e.stopPropagation();
+                            useProp(row, col, cellData.prop);
+                        });
                     }
                     
                     // 添加拖拽事件
@@ -638,6 +650,7 @@
 
         // 拖拽处理
         let touchStartCell = null;
+        let highlightedCell = null;
 
         function handleDragStart(e) {
             gameState.draggedCell = e.target.closest('.cell');
@@ -670,24 +683,67 @@
             e.preventDefault();
             touchStartCell = e.target.closest('.cell');
             touchStartCell.classList.add('dragging');
+            highlightedCell = null;
         }
 
         function handleTouchMove(e) {
             e.preventDefault();
+            if (!touchStartCell) return;
+
+            const touch = e.touches[0];
+            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetCell = targetElement ? targetElement.closest('.cell') : null;
+
+            // 清除之前的highlight
+            if (highlightedCell && highlightedCell !== touchStartCell) {
+                highlightedCell.classList.remove('swap-target');
+            }
+
+            // 检查是否是相邻cell
+            if (targetCell && targetCell !== touchStartCell) {
+                const row1 = parseInt(touchStartCell.dataset.row);
+                const col1 = parseInt(touchStartCell.dataset.col);
+                const row2 = parseInt(targetCell.dataset.row);
+                const col2 = parseInt(targetCell.dataset.col);
+
+                const isAdjacent = (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+
+                if (isAdjacent) {
+                    targetCell.classList.add('swap-target');
+                    highlightedCell = targetCell;
+                } else {
+                    highlightedCell = null;
+                }
+            } else {
+                highlightedCell = null;
+            }
         }
 
         function handleTouchEnd(e) {
             if (touchStartCell) {
-                const touch = e.changedTouches[0];
-                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                const targetCell = targetElement ? targetElement.closest('.cell') : null;
-                
-                if (targetCell && touchStartCell !== targetCell) {
-                    swapAnimals(touchStartCell, targetCell);
+                // 清除highlight
+                if (highlightedCell) {
+                    highlightedCell.classList.remove('swap-target');
                 }
-                
+
+                // 如果有高亮的cell，优先使用它
+                if (highlightedCell) {
+                    swapAnimals(touchStartCell, highlightedCell);
+                } else {
+                    // 回退到原来的逻辑
+                    const touch = e.changedTouches[0];
+                    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetCell = targetElement ? targetElement.closest('.cell') : null;
+
+                    if (targetCell && touchStartCell !== targetCell) {
+                        swapAnimals(touchStartCell, targetCell);
+                    }
+                }
+
                 touchStartCell.classList.remove('dragging');
                 touchStartCell = null;
+                highlightedCell = null;
             }
         }
 
@@ -990,8 +1046,12 @@
 
         // 使用道具
         function useProp(row, col, propType) {
-            if (gameState.isAnimating) return;
-            
+            console.log(`useProp called: row=${row}, col=${col}, propType=${propType}`);
+            if (gameState.isAnimating) {
+                console.log('Animation in progress, skipping useProp');
+                return;
+            }
+
             gameState.skillUsed = true;
             const positionsToEliminate = [];
             
