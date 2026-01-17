@@ -22,34 +22,94 @@
             align-items: center;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .game-container {
                 height: 100vh;
+                overflow: hidden;
             }
 
             .game-area {
                 flex: none;
-                height: calc(100vh - 60px);
-                padding: 5px;
+                height: calc(100vh - 70px);
+                padding: 8px;
             }
 
             .top-bar {
                 flex: none;
-                height: 40px;
-                margin-bottom: 5px;
+                height: 45px;
+                margin-bottom: 8px;
+                padding: 8px 12px;
             }
 
             .game-board {
                 flex: 1;
                 width: 100%;
                 aspect-ratio: 1;
+                gap: 1px;
+            }
+
+            .cell {
+                border-width: 1px;
+                border-radius: 3px;
+                min-height: 32px;
+                min-width: 32px;
             }
 
             .button-area {
                 flex: none;
-                height: 60px;
-                width: calc(100% - 20px);
+                height: 70px;
+                width: calc(100% - 16px);
                 margin: 0 auto;
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .game-button {
+                width: 48px;
+                height: 48px;
+                flex-shrink: 0;
+            }
+
+            .level-info {
+                font-size: 13px;
+            }
+
+            .score-display {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-area {
+                padding: 5px;
+            }
+
+            .top-bar {
+                height: 40px;
+                padding: 6px 10px;
+            }
+
+            .cell {
+                min-height: 28px;
+                min-width: 28px;
+            }
+
+            .button-area {
+                height: 65px;
+                padding: 5px;
+            }
+
+            .game-button {
+                width: 45px;
+                height: 45px;
+            }
+
+            .level-info {
+                font-size: 12px;
+            }
+
+            .score-display {
+                font-size: 14px;
             }
         }
 
@@ -182,16 +242,33 @@
             cursor: pointer;
             transition: transform 0.1s ease;
             position: relative;
+            will-change: transform;
         }
 
         .cell:hover {
             transform: scale(1.05);
         }
 
+        .cell:active {
+            transform: scale(0.98);
+            transition: transform 0.05s ease;
+        }
+
         .cell.dragging {
             transform: scale(1.1);
             z-index: 100;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .cell:hover {
+                transform: none;
+            }
+
+            .cell:active {
+                transform: scale(0.95);
+                background-color: #95b8be;
+            }
         }
 
         .cell.swap-target {
@@ -519,10 +596,34 @@
         // 初始化游戏
         function initGame() {
             setupEventListeners();
+            setupMobileOptimizations();
             if (!CONFIG.showTestButton) {
                 document.getElementById('test-btn').classList.add('hidden');
             }
             loadLevel(gameState.level);
+        }
+
+        // 移动设备优化
+        function setupMobileOptimizations() {
+            // 防止页面滚动和缩放
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.game-board')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.target.closest('.game-board')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // 添加振动反馈支持
+            if ('vibrate' in navigator) {
+                window.vibrate = (pattern) => navigator.vibrate(pattern);
+            } else {
+                window.vibrate = () => {}; // 空函数作为fallback
+            }
         }
 
         // 设置事件监听
@@ -774,10 +875,15 @@
                 const matches = findMatches();
                 if (matches.length > 0) {
                     gameState.comboCount = 0;
+                    vibrate([50]); // 成功交换的振动反馈
                     processMatches();
                 } else if (gameState.testModeEnabled) {
                     // 测试模式：允许无效移动
+                    vibrate([30]); // 轻微反馈
                 } else {
+                    // 无效移动的振动反馈
+                    vibrate([100, 50, 100]);
+
                     // 交换回来
                     const temp = gameState.grid[row1][col1];
                     gameState.grid[row1][col1] = gameState.grid[row2][col2];
