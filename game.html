@@ -72,6 +72,8 @@
 
         /* 顶部信息栏 */
         .top-bar {
+            flex: 1;
+            min-height: 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -157,7 +159,8 @@
 
         /* 游戏网格 */
         .game-board {
-            flex: 1;
+            flex: none;
+            height: auto;
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             grid-template-rows: repeat(10, 1fr);
