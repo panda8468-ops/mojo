@@ -15,7 +15,7 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #e1e1e1 0%, #e1e1e1 100%);
-            min-height: 100vh;
+            height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -23,28 +23,16 @@
         }
 
         @media (max-width: 768px) {
-            .game-container {
-                height: 100vh;
-                overflow: hidden;
-            }
-
             .game-area {
-                flex: none;
-                height: calc(100vh - 115px);
-                padding: 8px;
+                padding: 5px;
             }
 
             .top-bar {
-                flex: none;
-                height: 45px;
-                margin: 40px 0 8px 0;
+                margin: 20px 0 5px 0;
                 padding: 8px 12px;
             }
 
             .game-board {
-                flex: 1;
-                width: 100%;
-                aspect-ratio: 1;
                 gap: 1px;
             }
 
@@ -56,8 +44,6 @@
             }
 
             .button-area {
-                flex: none;
-                height: 70px;
                 width: calc(100% - 16px);
                 margin: -40px auto 0 auto;
                 padding: 8px;
@@ -81,13 +67,11 @@
 
         @media (max-width: 480px) {
             .game-area {
-                padding: 5px;
+                padding: 3px;
             }
 
             .top-bar {
-                flex: none;
-                height: 40px;
-                margin: 40px 0 6px 0;
+                margin: 20px 0 3px 0;
                 padding: 6px 10px;
             }
 
@@ -97,7 +81,6 @@
             }
 
             .button-area {
-                height: 65px;
                 margin: -40px auto 0 auto;
                 padding: 5px;
             }
@@ -118,11 +101,12 @@
 
         .game-container {
             width: 100%;
-            max-width: 500px;
             height: 100vh;
             display: flex;
             flex-direction: column;
             position: relative;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* 中间游戏区域 */
@@ -131,14 +115,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 15px 10px;
+            padding: 10px;
             background: url('assets/background.png') center/cover no-repeat;
             position: relative;
         }
 
         /* 顶部信息栏 */
         .top-bar {
-            height: 55px;
+            height: 10vh;
             flex: none;
             display: flex;
             justify-content: space-between;
@@ -146,7 +130,7 @@
             padding: 10px 15px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            margin: 20px 10px 15px 10px;
+            margin: 20px 10px 10px 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             backdrop-filter: blur(10px);
         }
@@ -234,7 +218,7 @@
             background: rgba(255, 255, 255, 0.3);
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            aspect-ratio: 0.7;
+            aspect-ratio: 7 / 10;
             width: 100%;
         }
 
@@ -309,7 +293,7 @@
 
         /* 下部区域 - 功能按钮 */
         .button-area {
-            height: 80px;
+            height: 15vh;
             flex: none;
             width: calc(100% - 20px);
             margin: -40px auto 10px auto;
