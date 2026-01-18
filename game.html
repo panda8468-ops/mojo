@@ -122,6 +122,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         /* 中间游戏区域 */
@@ -130,22 +131,24 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 15px 10px;
             background: url('assets/background.png') center/cover no-repeat;
+            position: relative;
         }
 
         /* 顶部信息栏 */
         .top-bar {
-            height: 50px;
+            height: 55px;
             flex: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 15px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            margin: 50px 0 10px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            margin: 20px 10px 15px 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
         }
 
         .test-button {
@@ -224,20 +227,22 @@
         /* 游戏网格 */
         .game-board {
             display: grid;
-            grid-template-columns: repeat(10, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             grid-template-rows: repeat(10, 1fr);
             gap: 2px;
             padding: 5px;
             background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            aspect-ratio: 1;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            aspect-ratio: 0.7;
             width: 100%;
         }
 
         .cell {
             background-color: #a1c5cb;
             border: 2px solid white;
-            border-radius: 5px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -307,12 +312,14 @@
             height: 80px;
             flex: none;
             width: calc(100% - 20px);
-            margin: -50px auto 0 auto;
+            margin: -40px auto 10px auto;
             display: flex;
             justify-content: space-around;
             align-items: center;
             padding: 10px;
             background: linear-gradient(180deg, #2c3e50, #34495e);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .game-button {
@@ -558,7 +565,8 @@
     <script>
         // 游戏配置
         const CONFIG = {
-            GRID_SIZE: 10,
+            GRID_ROWS: 10,
+            GRID_COLS: 7,
             ANIMAL_COUNT: 10,
             TOTAL_LEVELS: 80,
             BASE_TARGET_SCORE: 329,
@@ -679,9 +687,9 @@
         // 生成网格
         function generateGrid() {
             gameState.grid = [];
-            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+            for (let row = 0; row < CONFIG.GRID_ROWS; row++) {
                 gameState.grid[row] = [];
-                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                for (let col = 0; col < CONFIG.GRID_COLS; col++) {
                     gameState.grid[row][col] = {
                         animal: getRandomAnimal(),
                         prop: null
@@ -702,15 +710,15 @@
         // 渲染网格
         function renderGrid() {
             gameBoard.innerHTML = '';
-            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
-                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+            for (let row = 0; row < CONFIG.GRID_ROWS; row++) {
+                for (let col = 0; col < CONFIG.GRID_COLS; col++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
                     cell.dataset.row = row;
                     cell.dataset.col = col;
-                    
+
                     const cellData = gameState.grid[row][col];
-                    
+
                     // 创建动物元素
                     if (cellData.animal !== null) {
                         const animal = document.createElement('div');
@@ -718,7 +726,7 @@
                         animal.style.backgroundImage = `url('assets/animal${cellData.animal}.png')`;
                         cell.appendChild(animal);
                     }
-                    
+
                     // 如果有道具，创建道具元素
                     if (cellData.prop) {
                         const prop = document.createElement('div');
@@ -736,18 +744,18 @@
                             useProp(row, col, cellData.prop);
                         });
                     }
-                    
+
                     // 添加拖拽事件
                     cell.addEventListener('dragstart', handleDragStart);
                     cell.addEventListener('dragend', handleDragEnd);
                     cell.addEventListener('dragover', handleDragOver);
                     cell.addEventListener('drop', handleDrop);
-                    
+
                     // 触摸事件支持
                     cell.addEventListener('touchstart', handleTouchStart, { passive: false });
                     cell.addEventListener('touchmove', handleTouchMove, { passive: false });
                     cell.addEventListener('touchend', handleTouchEnd);
-                    
+
                     gameBoard.appendChild(cell);
                 }
             }
@@ -906,48 +914,48 @@
 
         // 检查是否存在可能的移动
         function hasPossibleMoves() {
-            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
-                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+            for (let row = 0; row < CONFIG.GRID_ROWS; row++) {
+                for (let col = 0; col < CONFIG.GRID_COLS; col++) {
                     // 尝试向右交换
-                    if (col < CONFIG.GRID_SIZE - 1) {
+                    if (col < CONFIG.GRID_COLS - 1) {
                         // 临时交换
                         let temp = gameState.grid[row][col];
                         gameState.grid[row][col] = gameState.grid[row][col + 1];
                         gameState.grid[row][col + 1] = temp;
-                        
+
                         if (findMatches().length > 0) {
                             // 交换回来
                             gameState.grid[row][col + 1] = gameState.grid[row][col];
                             gameState.grid[row][col] = temp;
                             return true;
                         }
-                        
+
                         // 交换回来
                         gameState.grid[row][col + 1] = gameState.grid[row][col];
                         gameState.grid[row][col] = temp;
                     }
-                    
+
                     // 尝试向下交换
-                    if (row < CONFIG.GRID_SIZE - 1) {
+                    if (row < CONFIG.GRID_ROWS - 1) {
                         // 临时交换
                         let temp = gameState.grid[row][col];
                         gameState.grid[row][col] = gameState.grid[row + 1][col];
                         gameState.grid[row + 1][col] = temp;
-                        
+
                         if (findMatches().length > 0) {
                             // 交换回来
                             gameState.grid[row + 1][col] = gameState.grid[row][col];
                             gameState.grid[row][col] = temp;
                             return true;
                         }
-                        
+
                         // 交换回来
                         gameState.grid[row + 1][col] = gameState.grid[row][col];
                         gameState.grid[row][col] = temp;
                     }
                 }
             }
-            
+
             return false;
         }
 
@@ -963,15 +971,15 @@
             const checked = new Set();
 
             // 检查横向
-            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
-                for (let col = 0; col < CONFIG.GRID_SIZE - 2; col++) {
+            for (let row = 0; row < CONFIG.GRID_ROWS; row++) {
+                for (let col = 0; col < CONFIG.GRID_COLS - 2; col++) {
                     const animal = gameState.grid[row][col].animal;
                     if (animal !== null &&
                         gameState.grid[row][col + 1].animal === animal &&
                         gameState.grid[row][col + 2].animal === animal) {
 
                         let length = 3;
-                        while (col + length < CONFIG.GRID_SIZE &&
+                        while (col + length < CONFIG.GRID_COLS &&
                                gameState.grid[row][col + length].animal === animal) {
                             length++;
                         }
@@ -988,15 +996,15 @@
             }
 
             // 检查纵向
-            for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-                for (let row = 0; row < CONFIG.GRID_SIZE - 2; row++) {
+            for (let col = 0; col < CONFIG.GRID_COLS; col++) {
+                for (let row = 0; row < CONFIG.GRID_ROWS - 2; row++) {
                     const animal = gameState.grid[row][col].animal;
                     if (animal !== null &&
                         gameState.grid[row + 1][col].animal === animal &&
                         gameState.grid[row + 2][col].animal === animal) {
 
                         let length = 3;
-                        while (row + length < CONFIG.GRID_SIZE &&
+                        while (row + length < CONFIG.GRID_ROWS &&
                                gameState.grid[row + length][col].animal === animal) {
                             length++;
                         }
@@ -1157,8 +1165,8 @@
                 const movedPositions = new Set(); // 记录移动的格子位置
 
                 // 从底部开始，逐列处理
-                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-                    for (let row = CONFIG.GRID_SIZE - 1; row >= 0; row--) {
+                for (let col = 0; col < CONFIG.GRID_COLS; col++) {
+                    for (let row = CONFIG.GRID_ROWS - 1; row >= 0; row--) {
                         // 跳过道具位置
                         if (propPositions.has(`${row},${col}`)) continue;
 
@@ -1212,8 +1220,8 @@
             const positionsToAnimate = new Set();
 
             // 从顶部开始填充空白，跳过道具位置
-            for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-                for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+            for (let col = 0; col < CONFIG.GRID_COLS; col++) {
+                for (let row = 0; row < CONFIG.GRID_ROWS; row++) {
                     if (gameState.grid[row][col].animal === null && !propPositions.has(`${row},${col}`)) {
                         gameState.grid[row][col] = {
                             animal: getRandomAnimal(),
@@ -1256,36 +1264,36 @@
             switch (propType) {
                 case 'prop_v': // 纵向炸弹 - 清除整列
                     console.log(`使用纵向炸弹在列 ${col}`);
-                    for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                    for (let r = 0; r < CONFIG.GRID_ROWS; r++) {
                         positionsToEliminate.push({ row: r, col });
                         console.log(`添加消除位置: 行${r}, 列${col}`);
                     }
                     console.log(`纵向炸弹消除位置总数: ${positionsToEliminate.length}`);
                     break;
-                    
+
                 case 'prop_h': // 横向炸弹 - 清除整行
                     console.log(`使用横向炸弹在行 ${row}`);
-                    for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                    for (let c = 0; c < CONFIG.GRID_COLS; c++) {
                         positionsToEliminate.push({ row, col: c });
                         console.log(`添加消除位置: 行${row}, 列${c}`);
                     }
                     console.log(`横向炸弹消除位置总数: ${positionsToEliminate.length}`);
                     break;
-                    
+
                 case 'prop_bomb': // 爆炸道具 - 清除3x3
                     for (let r = row - 1; r <= row + 1; r++) {
                         for (let c = col - 1; c <= col + 1; c++) {
-                            if (r >= 0 && r < CONFIG.GRID_SIZE && c >= 0 && c < CONFIG.GRID_SIZE) {
+                            if (r >= 0 && r < CONFIG.GRID_ROWS && c >= 0 && c < CONFIG.GRID_COLS) {
                                 positionsToEliminate.push({ row: r, col: c });
                             }
                         }
                     }
                     break;
-                    
+
                 case 'prop_magic': // 魔力道具 - 清除所有
                     console.log(`使用魔力道具清除全场`);
-                    for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
-                        for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                    for (let r = 0; r < CONFIG.GRID_ROWS; r++) {
+                        for (let c = 0; c < CONFIG.GRID_COLS; c++) {
                             positionsToEliminate.push({ row: r, col: c });
                         }
                     }
@@ -1349,29 +1357,29 @@
             
             switch (buttonType) {
                 case 'red': // 消除任意3行
-                    const rows = getRandomIndices(CONFIG.GRID_SIZE, 3);
+                    const rows = getRandomIndices(CONFIG.GRID_ROWS, 3);
                     rows.forEach(row => {
-                        for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                        for (let c = 0; c < CONFIG.GRID_COLS; c++) {
                             positionsToEliminate.push({ row, col: c });
                         }
                     });
                     break;
-                    
+
                 case 'yellow': // 消除任意3列
-                    const cols = getRandomIndices(CONFIG.GRID_SIZE, 3);
+                    const cols = getRandomIndices(CONFIG.GRID_COLS, 3);
                     cols.forEach(col => {
-                        for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                        for (let r = 0; r < CONFIG.GRID_ROWS; r++) {
                             positionsToEliminate.push({ row: r, col });
                         }
                     });
                     break;
-                    
+
                 case 'green': // 消除5x5格子
-                    const centerRow = Math.floor(CONFIG.GRID_SIZE / 2);
-                    const centerCol = Math.floor(CONFIG.GRID_SIZE / 2);
+                    const centerRow = Math.floor(CONFIG.GRID_ROWS / 2);
+                    const centerCol = Math.floor(CONFIG.GRID_COLS / 2);
                     for (let r = centerRow - 2; r <= centerRow + 2; r++) {
                         for (let c = centerCol - 2; c <= centerCol + 2; c++) {
-                            if (r >= 0 && r < CONFIG.GRID_SIZE && c >= 0 && c < CONFIG.GRID_SIZE) {
+                            if (r >= 0 && r < CONFIG.GRID_ROWS && c >= 0 && c < CONFIG.GRID_COLS) {
                                 positionsToEliminate.push({ row: r, col: c });
                             }
                         }
@@ -1454,8 +1462,8 @@
             
             // 动画结束后替换动物
             setTimeout(() => {
-                for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
-                    for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                for (let r = 0; r < CONFIG.GRID_ROWS; r++) {
+                    for (let c = 0; c < CONFIG.GRID_COLS; c++) {
                         gameState.grid[r][c].animal = getRandomAnimal();
                     }
                 }
